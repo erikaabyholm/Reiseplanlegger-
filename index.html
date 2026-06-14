@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mine reiser</title>
+<style>
+:root {
+  --ink: #1a1410;
+  --paper: #faf7f2;
+  --warm: #e8e0d4;
+  --gold: #b5813a;
+  --red: #c0392b;
+  --green: #27ae60;
+  --muted: #7a6e64;
+  --border: #d4c9bb;
+  --serif: Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--sans); background: var(--paper); color: var(--ink); min-height: 100vh; }
+
+/* HEADER */
+.hdr { background: var(--ink); color: #fff; padding: 28px 20px 22px; }
+.hdr-tag { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+.hdr h1 { font-family: var(--serif); font-size: 28px; font-weight: 700; }
+.hdr h1 span { color: var(--red); }
+.hdr-sub { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+
+/* SETUP CARD */
+.setup-card { margin: 20px 16px; background: #fff; border: 1.5px solid var(--gold); border-radius: 12px; padding: 18px; }
+.setup-title { font-family: var(--serif); font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+.setup-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.setup-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.setup-inp { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 14px; font-family: var(--sans); color: var(--ink); outline: none; width: 100%; }
+.setup-inp:focus { border-color: var(--gold); }
+.setup-inp[type=password] { letter-spacing: 2px; }
+.setup-btn { background: var(--ink); color: #fff; border: none; border-radius: 8px; padding: 11px 20px; font-size: 14px; font-family: var(--sans); font-weight: 600; cursor: pointer; width: 100%; margin-top: 4px; }
+.setup-btn:active { opacity: 0.8; }
+.setup-note { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+.setup-note a { color: var(--gold); }
+
+/* STATUS */
+.status-bar { display: flex; align-items: center; gap: 8px; margin: 0 16px 4px; font-size: 12px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+.dot.ok { background: var(--green); }
+.dot.err { background: var(--red); }
+
+/* REISER */
+.reiser-section { padding: 0 16px 100px; }
+.sec-title { font-family: var(--serif); font-size: 18px; font-weight: 600; margin: 20px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.reise-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+.reise-card:active { background: #f5f0ea; }
+.reise-top { display: flex; align-items: center; gap: 14px; padding: 16px; cursor: pointer; }
+.reise-icon { width: 46px; height: 46px; border-radius: 10px; background: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.reise-info { flex: 1; min-width: 0; }
+.reise-name { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reise-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.reise-arr { color: var(--muted); font-size: 18px; }
+.reise-actions { display: flex; border-top: 1px solid var(--border); }
+.reise-act-btn { flex: 1; padding: 10px; font-size: 12px; font-family: var(--sans); color: var(--muted); background: none; border: none; cursor: pointer; text-align: center; }
+.reise-act-btn:first-child { border-right: 1px solid var(--border); }
+.reise-act-btn.danger { color: var(--red); }
+
+/* NY REISE MODAL */
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; }
+.modal-bg.on { display: flex; align-items: flex-end; }
+.modal { background: var(--paper); border-radius: 16px 16px 0 0; padding: 24px 20px 40px; width: 100%; }
+.modal-title { font-family: var(--serif); font-size: 20px; font-weight: 700; margin-bottom: 18px; }
+.modal-inp { border: 1px solid var(--border); border-radius: 8px; padding: 11px 12px; font-size: 14px; font-family: var(--sans); color: var(--ink); outline: none; width: 100%; margin-bottom: 10px; }
+.modal-inp:focus { border-color: var(--gold); }
+.modal-row { display: flex; gap: 8px; }
+.modal-btn { flex: 1; padding: 12px; font-size: 14px; font-family: var(--sans); font-weight: 600; border-radius: 8px; border: none; cursor: pointer; }
+.modal-btn.primary { background: var(--ink); color: #fff; }
+.modal-btn.secondary { background: var(--warm); color: var(--ink); }
+
+/* FAB */
+.fab { position: fixed; bottom: 28px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: var(--gold); color: #fff; font-size: 28px; border: none; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.fab:active { opacity: 0.8; transform: scale(0.96); }
+
+/* LOADING / EMPTY */
+.loading { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+.loading-spin { display: inline-block; width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty-state { text-align: center; padding: 50px 20px; }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-title { font-family: var(--serif); font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+.empty-sub { font-size: 13px; color: var(--muted); }
+
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+.toast.on { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-tag">Reiseplanlegger</div>
+  <h1>Mine <span>reiser</span></h1>
+  <div class="hdr-sub" id="userSub">Kobler til GitHub...</div>
+</div>
+
+<div id="setupSection" style="display:none">
+  <div class="setup-card">
+    <div class="setup-title">Koble til GitHub</div>
+    <div class="setup-row">
+      <div class="setup-label">GitHub-brukernavn</div>
+      <input class="setup-inp" id="ghUser" type="text" placeholder="erikaabyholm" autocomplete="off" autocorrect="off" autocapitalize="off">
+    </div>
+    <div class="setup-row">
+      <div class="setup-label">Repository-navn</div>
+      <input class="setup-inp" id="ghRepo" type="text" placeholder="Reiseplanlegger" autocomplete="off" autocorrect="off" autocapitalize="off">
+    </div>
+    <div class="setup-row">
+      <div class="setup-label">Personal Access Token</div>
+      <input class="setup-inp" id="ghToken" type="password" placeholder="ghp_..." autocomplete="off">
+    </div>
+    <button class="setup-btn" onclick="saveSetup()">Koble til</button>
+    <div class="setup-note">Tokenet lagres kun på denne enheten, aldri i skyen.<br>
+    <a href="https://github.com/settings/tokens" target="_blank">Lag token på github.com/settings/tokens</a> — huk av «repo».</div>
+  </div>
+</div>
+
+<div id="mainSection" style="display:none">
+  <div class="status-bar">
+    <div class="dot" id="statusDot"></div>
+    <span id="statusTxt">Laster...</span>
+  </div>
+  <div class="reiser-section">
+    <div class="sec-title">Dine reiser</div>
+    <div id="reiseList"></div>
+  </div>
+</div>
+
+<button class="fab" id="fabBtn" style="display:none" onclick="showNyReise()">+</button>
+
+<div class="modal-bg" id="nyReiseModal">
+  <div class="modal">
+    <div class="modal-title">Ny reise</div>
+    <input class="modal-inp" id="nyNavn" placeholder="Navn, f.eks. Korea &amp; Japan 2026" autocorrect="off">
+    <input class="modal-inp" id="nyEmoji" placeholder="Emoji, f.eks. 🇯🇵 (valgfritt)">
+    <div class="modal-row">
+      <button class="modal-btn secondary" onclick="closeModal()">Avbryt</button>
+      <button class="modal-btn primary" onclick="opprettReise()">Opprett</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var GH = {
+  user: '',
+  repo: '',
+  token: '',
+  base: function() { return 'https://api.github.com/repos/' + this.user + '/' + this.repo + '/contents/reiser/'; }
+};
+
+function loadConfig() {
+  try {
+    var c = JSON.parse(localStorage.getItem('gh_config') || '{}');
+    GH.user = c.user || '';
+    GH.repo = c.repo || '';
+    GH.token = c.token || '';
+  } catch(e) {}
+}
+
+function saveSetup() {
+  GH.user = document.getElementById('ghUser').value.trim();
+  GH.repo = document.getElementById('ghRepo').value.trim();
+  GH.token = document.getElementById('ghToken').value.trim();
+  if (!GH.user || !GH.repo || !GH.token) { showToast('Fyll inn alle feltene'); return; }
+  localStorage.setItem('gh_config', JSON.stringify({ user: GH.user, repo: GH.repo, token: GH.token }));
+  document.getElementById('setupSection').style.display = 'none';
+  document.getElementById('mainSection').style.display = 'block';
+  document.getElementById('fabBtn').style.display = 'flex';
+  lastReiser();
+}
+
+function ghHeaders() {
+  return { 'Authorization': 'token ' + GH.token, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' };
+}
+
+function setStatus(ok, txt) {
+  var dot = document.getElementById('statusDot');
+  dot.className = 'dot ' + (ok ? 'ok' : 'err');
+  document.getElementById('statusTxt').textContent = txt;
+}
+
+async function lastReiser() {
+  var list = document.getElementById('reiseList');
+  list.innerHTML = '<div class="loading"><div class="loading-spin"></div><br>Henter reiser...</div>';
+  try {
+    var url = 'https://api.github.com/repos/' + GH.user + '/' + GH.repo + '/contents/reiser';
+    var r = await fetch(url, { headers: ghHeaders() });
+    if (r.status === 404) {
+      // Mappe finnes ikke ennå
+      setStatus(true, 'Ingen reiser ennå');
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">✈️</div><div class="empty-title">Ingen reiser ennå</div><div class="empty-sub">Trykk + for å opprette din første reise</div></div>';
+      document.getElementById('userSub').textContent = GH.user + ' · ' + GH.repo;
+      return;
+    }
+    if (!r.ok) throw new Error('GitHub-feil: ' + r.status);
+    var filer = await r.json();
+    var jsonFiler = filer.filter(function(f) { return f.name.endsWith('.json'); });
+    setStatus(true, 'Tilkoblet · ' + jsonFiler.length + ' reise' + (jsonFiler.length !== 1 ? 'r' : ''));
+    document.getElementById('userSub').textContent = GH.user + ' · ' + GH.repo;
+    if (jsonFiler.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">✈️</div><div class="empty-title">Ingen reiser ennå</div><div class="empty-sub">Trykk + for å opprette din første reise</div></div>';
+      return;
+    }
+    list.innerHTML = '';
+    for (var f of jsonFiler) {
+      visReiseKort(f, list);
+    }
+  } catch(e) {
+    setStatus(false, 'Tilkoblingsfeil');
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Kunne ikke koble til</div><div class="empty-sub">' + e.message + '</div></div>';
+  }
+}
+
+function visReiseKort(fil, container) {
+  var id = fil.name.replace('.json', '');
+  var div = document.createElement('div');
+  div.className = 'reise-card';
+  div.innerHTML = '<div class="reise-top" onclick="apneReise(\'' + id + '\')">'
+    + '<div class="reise-icon" id="icon-' + id + '">✈️</div>'
+    + '<div class="reise-info">'
+    + '<div class="reise-name" id="navn-' + id + '">' + id + '</div>'
+    + '<div class="reise-meta" id="meta-' + id + '">Laster...</div>'
+    + '</div>'
+    + '<div class="reise-arr">›</div>'
+    + '</div>'
+    + '<div class="reise-actions">'
+    + '<button class="reise-act-btn" onclick="lastOppJson(\'' + id + '\')">📤 Importer data</button>'
+    + '<button class="reise-act-btn danger" onclick="slettReise(\'' + id + '\')">🗑️ Slett</button>'
+    + '</div>';
+  container.appendChild(div);
+  hentReiseMeta(fil.download_url, id);
+}
+
+async function hentReiseMeta(url, id) {
+  try {
+    var r = await fetch(url, { headers: ghHeaders() });
+    var data = await r.json();
+    document.getElementById('navn-' + id).textContent = data._navn || id;
+    document.getElementById('icon-' + id).textContent = data._emoji || '✈️';
+    var start = data.tripStart ? new Date(data.tripStart).toLocaleDateString('no', {day:'numeric',month:'short',year:'numeric'}) : '';
+    var netter = data.route ? data.route.reduce(function(s,c){return s+(data['nights_'+c]||0);},0) : 0;
+    document.getElementById('meta-' + id).textContent = (start ? start + ' · ' : '') + (netter ? netter + ' netter' : '');
+  } catch(e) {}
+}
+
+async function apneReise(id) {
+  showToast('Åpner ' + id + '...');
+  try {
+    var url = 'https://api.github.com/repos/' + GH.user + '/' + GH.repo + '/contents/reiser/' + id + '.json';
+    var r = await fetch(url, { headers: ghHeaders() });
+    var meta = await r.json();
+    var data = JSON.parse(atob(meta.content.replace(/\n/g,'')));
+    // Lagre i sessionStorage for reiseplan-appen å plukke opp
+    sessionStorage.setItem('gh_rp_data', JSON.stringify(data));
+    sessionStorage.setItem('gh_rp_id', id);
+    sessionStorage.setItem('gh_rp_sha', meta.sha);
+    sessionStorage.setItem('gh_config', JSON.stringify({user:GH.user,repo:GH.repo,token:GH.token}));
+    window.location.href = 'reiseplan.html';
+  } catch(e) {
+    showToast('Feil: ' + e.message);
+  }
+}
+
+async function opprettReise() {
+  var navn = document.getElementById('nyNavn').value.trim();
+  var emoji = document.getElementById('nyEmoji').value.trim() || '✈️';
+  if (!navn) { showToast('Skriv inn et navn'); return; }
+  var id = navn.toLowerCase().replace(/[^a-z0-9æøå]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+  var data = { _navn: navn, _emoji: emoji, route: ['tokyo','oslo'], tripStart: '', _v: Date.now() };
+  try {
+    var url = 'https://api.github.com/repos/' + GH.user + '/' + GH.repo + '/contents/reiser/' + id + '.json';
+    var r = await fetch(url, {
+      method: 'PUT',
+      headers: ghHeaders(),
+      body: JSON.stringify({ message: 'Opprett reise: ' + navn, content: btoa(unescape(encodeURIComponent(JSON.stringify(data)))) })
+    });
+    if (!r.ok) throw new Error('GitHub-feil ' + r.status);
+    closeModal();
+    showToast('Reise opprettet!');
+    setTimeout(lastReiser, 800);
+  } catch(e) { showToast('Feil: ' + e.message); }
+}
+
+async function slettReise(id) {
+  if (!confirm('Slette "' + id + '"? Dette kan ikke angres.')) return;
+  try {
+    var url = 'https://api.github.com/repos/' + GH.user + '/' + GH.repo + '/contents/reiser/' + id + '.json';
+    var r = await fetch(url, { headers: ghHeaders() });
+    var meta = await r.json();
+    var r2 = await fetch(url, {
+      method: 'DELETE',
+      headers: ghHeaders(),
+      body: JSON.stringify({ message: 'Slett reise: ' + id, sha: meta.sha })
+    });
+    if (!r2.ok) throw new Error('Feil ' + r2.status);
+    showToast('Slettet');
+    setTimeout(lastReiser, 500);
+  } catch(e) { showToast('Feil: ' + e.message); }
+}
+
+function lastOppJson(id) {
+  var input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json,application/json';
+  input.onchange = async function() {
+    var file = input.files[0]; if (!file) return;
+    var text = await file.text();
+    try {
+      var data = JSON.parse(text);
+      await lagreReise(id, data);
+      showToast('Data importert!');
+    } catch(e) { showToast('Ugyldig JSON-fil'); }
+  };
+  input.click();
+}
+
+async function lagreReise(id, data) {
+  var url = 'https://api.github.com/repos/' + GH.user + '/' + GH.repo + '/contents/reiser/' + id + '.json';
+  var shaR = await fetch(url, { headers: ghHeaders() });
+  var sha = null;
+  if (shaR.ok) { var m = await shaR.json(); sha = m.sha; }
+  var body = { message: 'Oppdater ' + id, content: btoa(unescape(encodeURIComponent(JSON.stringify(data)))) };
+  if (sha) body.sha = sha;
+  var r = await fetch(url, { method: 'PUT', headers: ghHeaders(), body: JSON.stringify(body) });
+  if (!r.ok) throw new Error('Feil ' + r.status);
+}
+
+function showNyReise() { document.getElementById('nyReiseModal').classList.add('on'); document.getElementById('nyNavn').focus(); }
+function closeModal() { document.getElementById('nyReiseModal').classList.remove('on'); }
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  setTimeout(function(){ t.classList.remove('on'); }, 2500);
+}
+
+// INIT
+loadConfig();
+if (GH.user && GH.repo && GH.token) {
+  document.getElementById('mainSection').style.display = 'block';
+  document.getElementById('fabBtn').style.display = 'flex';
+  lastReiser();
+} else {
+  document.getElementById('setupSection').style.display = 'block';
+  document.getElementById('userSub').textContent = 'Ikke tilkoblet';
+}
+</script>
+</body>
+</html>
